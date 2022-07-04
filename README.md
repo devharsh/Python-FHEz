@@ -4,7 +4,7 @@ This repository is an upgraded version of https://github.com/DreamingRaven/pytho
 
 # How to run
 
-Follow the build instructions for Microsoft SEAL Python bindings from https://github.com/Huelse/SEAL-Python#build before building this project! You may place your shared library (```.so``` for Linux* or ```.dll``` for Windows) in examples directory.
+Follow the build instructions for Microsoft ```SEAL``` Python bindings from https://github.com/Huelse/SEAL-Python#build before building this project! You may place your shared library (```.so``` for Linux* or ```.dll``` for Windows) in ```examples``` directory.
 
 - ```$git clone https://github.com/devharsh/Python-FHEz```
 - ```$cd Python-FHEz```
