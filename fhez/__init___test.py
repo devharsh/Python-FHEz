@@ -17,7 +17,7 @@ class FHEz_Test(unittest.TestCase):
     def tearDown(self):
         """Calculate and print time delta."""
         t = time.time() - self.startTime
-        print('%s: %.3f' % (self.id(), t))
+        print("{}: {:.3f}".format(self.id(), t))
 
     def test_import(self):
         """Test basic import of FHEZ."""

@@ -4,7 +4,8 @@
 # @Last modified time: 2021-02-11T11:32:09+00:00
 # @License: please see LICENSE file in project root
 
-class ReCache():
+
+class ReCache:
     """Core caching object for ReSeal.
 
     This cache can be enabled (default) to improve/ minimise the need to

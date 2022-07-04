@@ -6,13 +6,13 @@
 # @Last modified time: 2021-07-24T15:51:36+01:00
 # @License: please see LICENSE file in project root
 
+import logging as logger
 import os
 import sys
 import tempfile
 import unittest
-import numpy as np
-import logging as logger
 
+import numpy as np
 import seal
 
 # backward compatibility
@@ -146,26 +146,29 @@ class ReSeal(object):
     :type relin_keys: seal.RelinKeys
     :param galois_keys:
     :type galois_keys: seal.GaloisKeys
-    :example: ReSeal(scheme=seal.scheme_type.CKKS)
+    :example: ReSeal(scheme=seal.scheme_type.ckks)
     """
 
-    def __init__(self, scheme: seal.scheme_type = None,
-                 poly_modulus_degree: int = None,
-                 coefficient_modulus: list = None,
-                 scale: int = None,
-                 parameters: seal.EncryptionParameters = None,
-                 ciphertext: seal.Ciphertext = None,
-                 public_key: seal.PublicKey = None,
-                 private_key: seal.SecretKey = None,
-                 switch_keys: seal.KSwitchKeys = None,
-                 relin_keys: seal.RelinKeys = None,
-                 galois_keys: seal.GaloisKeys = None,
-                 cache: bool = None):
+    def __init__(
+        self,
+        scheme: seal.scheme_type = None,
+        poly_modulus_degree: int = None,
+        coefficient_modulus: list = None,
+        scale: int = None,
+        parameters: seal.EncryptionParameters = None,
+        ciphertext: seal.Ciphertext = None,
+        public_key: seal.PublicKey = None,
+        private_key: seal.SecretKey = None,
+        switch_keys: seal.KSwitchKeys = None,
+        relin_keys: seal.RelinKeys = None,
+        galois_keys: seal.GaloisKeys = None,
+        cache: bool = None,
+    ):
         if scheme:
             if scheme == 1:
-                scheme = seal.scheme_type.BFV
+                scheme = seal.scheme_type.bfv
             elif scheme == 2:
-                scheme = seal.scheme_type.CKKS
+                scheme = seal.scheme_type.ckks
             self._scheme = scheme
         if poly_modulus_degree:
             self._poly_modulus_degree = poly_modulus_degree
@@ -197,8 +200,7 @@ class ReSeal(object):
         for key in self.__dict__:
             if key in ["_cache"]:
                 pass
-            elif key in ["_poly_modulus_degree", "_coefficient_modulus",
-                         "_scale"]:
+            elif key in ["_poly_modulus_degree", "_coefficient_modulus", "_scale"]:
                 state[key] = self.__dict__[key]
             else:
                 state[key] = self.__dict__[key].__getstate__()
@@ -262,8 +264,7 @@ class ReSeal(object):
         """Use state dict to instanciate a new ReSeal without ciphertext."""
         # extract desired keys from out internal dictionary
         d = self.__dict__
-        d = {k: d[k] for k, v in d.items() if k not in ("_ciphertext",
-                                                        "_cache")}
+        d = {k: d[k] for k, v in d.items() if k not in ("_ciphertext", "_cache")}
         # now override new reseal object dict with the keys it should share
         new_reseal = ReSeal()
         for key in d:
@@ -272,8 +273,7 @@ class ReSeal(object):
 
     def __str__(self):
         d = self.__dict__
-        d = {k: d[k] for k, v in d.items() if k not in ("_ciphertext",
-                                                        "_cache")}
+        d = {k: d[k] for k, v in d.items() if k not in ("_ciphertext", "_cache")}
         return "{}({})".format(self.__class__.__name__, d)
 
     # arithmetic operations
@@ -284,10 +284,8 @@ class ReSeal(object):
             encrypted_result = seal.Ciphertext()
             if isinstance(other, ReSeal):
                 other = other.ciphertext
-            ciphertext, other = self._homogenise_parameters(
-                self.ciphertext, other)
-            self.evaluator.add(ciphertext,
-                               other, encrypted_result)
+            ciphertext, other = self._homogenise_parameters(self.ciphertext, other)
+            self.evaluator.add(ciphertext, other, encrypted_result)
             # addition of two ciphertexts does not require relinearization
             # or rescaling (by modulus swapping).
         else:
@@ -297,9 +295,9 @@ class ReSeal(object):
             # switching modulus chain of plaintex to ciphertexts level
             # so computation is possible
             ciphertext, plaintext = self._homogenise_parameters(
-                a=self.ciphertext, b=plaintext)
-            self.evaluator.add_plain(ciphertext, plaintext,
-                                     encrypted_result)
+                a=self.ciphertext, b=plaintext
+            )
+            encrypted_result = self.evaluator.add_plain(ciphertext, plaintext)
             # no need to drop modulus chain addition is fairly small
         # now we take this encrypted result and return it as a new reseal obj
         # so that it can be used as input to __add__ and __mult__ again
@@ -313,11 +311,9 @@ class ReSeal(object):
             encrypted_result = seal.Ciphertext()
             if isinstance(other, ReSeal):
                 other = other.ciphertext
-            ciphertext, other = self._homogenise_parameters(
-                self.ciphertext, other)
+            ciphertext, other = self._homogenise_parameters(self.ciphertext, other)
             self.evaluator.multiply(ciphertext, other, encrypted_result)
-            self.evaluator.relinearize_inplace(encrypted_result,
-                                               self.relin_keys)
+            self.evaluator.relinearize_inplace(encrypted_result, self.relin_keys)
             self.evaluator.rescale_to_next_inplace(encrypted_result)
         else:
             # if multiplying ciphertext * numeric
@@ -326,10 +322,10 @@ class ReSeal(object):
             # switching modulus chain of plaintex to ciphertexts level
             # so computation is possible
             ciphertext, plaintext = self._homogenise_parameters(
-                a=self.ciphertext, b=plaintext)
+                a=self.ciphertext, b=plaintext
+            )
             # the computation
-            self.evaluator.multiply_plain(ciphertext,
-                                          plaintext, encrypted_result)
+            encrypted_result = self.evaluator.multiply_plain(ciphertext, plaintext)
             # dropping one level of modulus chain to stabalise ciphertext
             self.evaluator.rescale_to_next_inplace(encrypted_result)
         # now we take this encrypted result and return it as a new reseal obj
@@ -346,7 +342,7 @@ class ReSeal(object):
         """Deduce the length of the encrypted vector from its poly mod deg."""
         # TODO ensure rigorous type casting if needed to enforce all return int
         # depending on if BFV or CKKS we can deduce the number of slots
-        if self.scheme == seal.scheme_type.BFV:
+        if self.scheme == seal.scheme_type.bfv:
             return self.poly_modulus_degree
         else:  # CKKS has half as many slots as the poly modulus degree
             # here we use the special syntax // to prevent it returning a float
@@ -366,8 +362,7 @@ class ReSeal(object):
     def new(self):
         r = ReSeal()
         # r.__dict__ == self.__dict__
-        d = {
-            k: v for (k, v) in self.__dict__.items() if "_ciphertext" not in k}
+        d = {k: v for (k, v) in self.__dict__.items() if "_ciphertext" not in k}
         r.__dict__ = d
         return r
 
@@ -384,10 +379,8 @@ class ReSeal(object):
         if isinstance(a, seal.Ciphertext) and isinstance(b, seal.Ciphertext):
             # find which one is lowest on modulus chain and swap both to that
             a_new, b_new = seal.Ciphertext(), seal.Ciphertext()
-            a_chain_id = self.context.get_context_data(
-                a.parms_id()).chain_index()
-            b_chain_id = self.context.get_context_data(
-                b.parms_id()).chain_index()
+            a_chain_id = self.context.get_context_data(a.parms_id()).chain_index()
+            b_chain_id = self.context.get_context_data(b.parms_id()).chain_index()
             if b_chain_id < a_chain_id:
                 lowest_parms_id = b.parms_id()
             else:
@@ -407,8 +400,8 @@ class ReSeal(object):
             ciphertext, plaintext = seal.Ciphertext(), seal.Plaintext()
             # doing both so they are both copied exactly as each other
             # rather than one being a reference, and the other being a new obj
-            self.evaluator.mod_switch_to(a, a.parms_id(), ciphertext)
-            self.evaluator.mod_switch_to(b, a.parms_id(), plaintext)
+            ciphertext = self.evaluator.mod_switch_to(a, a.parms_id())
+            plaintext = self.evaluator.mod_switch_to(b, a.parms_id())
             ciphertext.scale()
             ciphertext.scale(self.scale)
             plaintext.scale()
@@ -428,15 +421,15 @@ class ReSeal(object):
             data = data.tolist()
 
         if isinstance(data, (int, float)):
-            self.encoder.encode(data, self.scale, plaintext)
+            plaintext = self.encoder.encode(data, self.scale)
         elif isinstance(data, seal.Plaintext):
             plaintext = data
-        elif isinstance(data, seal.DoubleVector):
+        elif isinstance(data, seal.VectorDouble):
             vector = data
-            self.encoder.encode(vector, self.scale, plaintext)
+            plaintext = self.encoder.encode(vector, self.scale)
         else:
-            vector = seal.DoubleVector(data)
-            self.encoder.encode(vector, self.scale, plaintext)
+            vector = seal.VectorDouble(data)
+            plaintext = self.encoder.encode(vector, self.scale)
         return plaintext
 
     @property
@@ -450,7 +443,7 @@ class ReSeal(object):
 
     # # # basic primitive building blocks (scheme, poly-mod, coeff)
     # {
-    #     "scheme": seal.scheme_type.CKKS,
+    #     "scheme": seal.scheme_type.ckks,
     #     "poly_mod_deg": 8192,
     #     "coeff_mod": [60, 40, 40, 60],
     #     "scale": pow(2.0, 40),
@@ -462,17 +455,17 @@ class ReSeal(object):
         """Scheme represents the encryption-scheme to use.
 
         to specify CKKS (you probably want this one):
-            ReSeal(scheme=2) OR ReSeal(scheme=seal.scheme_type.CKKS)
+            ReSeal(scheme=2) OR ReSeal(scheme=seal.scheme_type.ckks)
         to specify BFV:
-            ReSeal(scheme=1) OR ReSeal(scheme=seal.scheme_type.BFV)
+            ReSeal(scheme=1) OR ReSeal(scheme=seal.scheme_type.bfv)
         """
         try:
             return self._scheme
         except AttributeError:
             me = self.__class__.__name__
             raise ValueError(
-                "You fkn idiot you forgot to give {}({}=SOMETHING)".format(
-                    me, "scheme"))
+                "You fkn idiot you forgot to give {}({}=SOMETHING)".format(me, "scheme")
+            )
 
     @property
     def poly_modulus_degree(self):
@@ -483,7 +476,9 @@ class ReSeal(object):
             me = self.__class__.__name__
             raise ValueError(
                 "You fkn idiot you forgot to give {}({}=SOMETHING)".format(
-                    me, "poly_modulus_degree"))
+                    me, "poly_modulus_degree"
+                )
+            )
 
     @property
     def coefficient_modulus(self):
@@ -499,7 +494,9 @@ class ReSeal(object):
             me = self.__class__.__name__
             raise ValueError(
                 "You fkn idiot you forgot to give {}({}=SOMETHING)".format(
-                    me, "coefficient_modulus"))
+                    me, "coefficient_modulus"
+                )
+            )
 
     @property
     def scale(self):
@@ -513,8 +510,8 @@ class ReSeal(object):
         except AttributeError:
             me = self.__class__.__name__
             raise ValueError(
-                "You fkn idiot you forgot to give {}({}=SOMETHING)".format(
-                    me, "scale"))
+                "You fkn idiot you forgot to give {}({}=SOMETHING)".format(me, "scale")
+            )
 
     # # # Encryptor orchestrators and helpers (parameters, context, keygen)
     @property
@@ -523,12 +520,14 @@ class ReSeal(object):
         if self.__dict__.get("_parameters"):
             return self._parameters
         else:
-            if self.scheme == seal.scheme_type.CKKS or self.scheme == 2:
+            if self.scheme == seal.scheme_type.ckks or self.scheme == 2:
                 params = seal.EncryptionParameters(self.scheme)
                 params.set_poly_modulus_degree(self.poly_modulus_degree)
-                params.set_coeff_modulus(seal.CoeffModulus.Create(
-                    self.poly_modulus_degree,
-                    self.coefficient_modulus))
+                params.set_coeff_modulus(
+                    seal.CoeffModulus.Create(
+                        self.poly_modulus_degree, self.coefficient_modulus
+                    )
+                )
             else:
                 raise NotImplementedError("BFV parameters not yet implemented")
 
@@ -544,7 +543,7 @@ class ReSeal(object):
         """Specific context object for this particular encryption. (cached)"""
         if self.cache.context:
             return self.cache.context
-        context = seal.SEALContext.Create(self.parameters)
+        context = seal.SEALContext(self.parameters)
         self.cache.context = context
         return context
 
@@ -561,10 +560,10 @@ class ReSeal(object):
             return self._public_key
         else:
             keygen = self.key_generator
-            self.public_key = keygen.public_key()
+            self.public_key = keygen.create_public_key()
             self.private_key = keygen.secret_key()
-            if (self.scheme == seal.scheme_type.CKKS) or (self.scheme == 2):
-                self.relin_keys = keygen.relin_keys()
+            if (self.scheme == seal.scheme_type.ckks) or (self.scheme == 2):
+                self.relin_keys = keygen.create_relin_keys()
             else:
                 raise NotImplementedError("BFV key generation not complete")
             return self.public_key
@@ -580,10 +579,10 @@ class ReSeal(object):
             return self._private_key
         else:
             keygen = self.key_generator
-            self.public_key = keygen.public_key()
+            self.public_key = keygen.create_public_key()
             self.private_key = keygen.secret_key()
-            if (self.scheme == seal.scheme_type.CKKS) or (self.scheme == 2):
-                self.relin_keys = keygen.relin_keys()
+            if (self.scheme == seal.scheme_type.ckks) or (self.scheme == 2):
+                self.relin_keys = keygen.create_relin_keys()
             else:
                 raise NotImplementedError("BFV key generation not complete")
             return self.private_key
@@ -599,10 +598,10 @@ class ReSeal(object):
             return self._relin_keys
         else:
             keygen = self.key_generator
-            self.public_key = keygen.public_key()
+            self.public_key = keygen.create_public_key()
             self.private_key = keygen.secret_key()
-            if (self.scheme == seal.scheme_type.CKKS) or (self.scheme == 2):
-                self.relin_keys = keygen.relin_keys()
+            if (self.scheme == seal.scheme_type.ckks) or (self.scheme == 2):
+                self.relin_keys = keygen.create_relin_keys()
             else:
                 raise NotImplementedError("BFV key generation not complete")
             return self.relin_keys
@@ -665,7 +664,7 @@ class ReSeal(object):
         else:
             plaintext = self._to_plaintext(data)
             ciphertext = seal.Ciphertext()
-            self.encryptor.encrypt(plaintext, ciphertext)
+            ciphertext = self.encryptor.encrypt(plaintext)
             self._ciphertext = ciphertext
 
     # # # plaintext
@@ -674,8 +673,7 @@ class ReSeal(object):
         """Polynomial plaintext encoded from complex values."""
         seal_plaintext = seal.Plaintext()
         self.decryptor.decrypt(self._ciphertext, seal_plaintext)
-        vector_plaintext = seal.DoubleVector()
-        self.encoder.decode(seal_plaintext, vector_plaintext)
+        vector_plaintext = self.encoder.decode(seal_plaintext)
         return np.array(vector_plaintext)
 
 

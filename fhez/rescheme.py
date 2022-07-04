@@ -15,18 +15,23 @@ class ReScheme(marshmallow.Schema):
     on the recieving end. However since byte strings are encoded as strings
     there is little further testing that can be done on them.
     """
+
     _scheme = marshmallow.fields.Integer()
     _poly_modulus_degree = marshmallow.fields.Integer()
-    _coefficient_modulus = marshmallow.fields.List(
-        marshmallow.fields.Integer())
+    _coefficient_modulus = marshmallow.fields.List(marshmallow.fields.Integer())
     _scale = marshmallow.fields.Float()
-    _parameters = marshmallow.fields.Dict(keys=marshmallow.fields.Str(),
-                                          values=marshmallow.fields.Str())
-    _public_key = marshmallow.fields.Dict(keys=marshmallow.fields.Str(),
-                                          values=marshmallow.fields.Str())
-    _private_key = marshmallow.fields.Dict(keys=marshmallow.fields.Str(),
-                                           values=marshmallow.fields.Str())
-    _relin_keys = marshmallow.fields.Dict(keys=marshmallow.fields.Str(),
-                                          values=marshmallow.fields.Str())
-    _ciphertext = marshmallow.fields.Dict(keys=marshmallow.fields.Str(),
-                                          values=marshmallow.fields.Str())
+    _parameters = marshmallow.fields.Dict(
+        keys=marshmallow.fields.Str(), values=marshmallow.fields.Str()
+    )
+    _public_key = marshmallow.fields.Dict(
+        keys=marshmallow.fields.Str(), values=marshmallow.fields.Str()
+    )
+    _private_key = marshmallow.fields.Dict(
+        keys=marshmallow.fields.Str(), values=marshmallow.fields.Str()
+    )
+    _relin_keys = marshmallow.fields.Dict(
+        keys=marshmallow.fields.Str(), values=marshmallow.fields.Str()
+    )
+    _ciphertext = marshmallow.fields.Dict(
+        keys=marshmallow.fields.Str(), values=marshmallow.fields.Str()
+    )

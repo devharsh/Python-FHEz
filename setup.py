@@ -10,7 +10,8 @@
 
 import re
 import subprocess
-from setuptools import setup, find_packages, find_namespace_packages
+
+from setuptools import find_namespace_packages, find_packages, setup
 
 
 def get_gitVersion():
@@ -20,11 +21,11 @@ def get_gitVersion():
         # below equivelant or achlinux versioning scheme:
         # git describe --long | sed 's/\([^-]*-\)g/r\1/;s/-/./g
         git_describe = subprocess.Popen(
-            ["git", "describe", "--long"],
-            stdout=subprocess.PIPE)
+            ["git", "describe", "--long"], stdout=subprocess.PIPE
+        )
         version_num = subprocess.check_output(
-            ["sed", r"s/\([^-]*-\)g/r\1/;s/-/./g"],
-            stdin=git_describe.stdout)
+            ["sed", r"s/\([^-]*-\)g/r\1/;s/-/./g"], stdin=git_describe.stdout
+        )
         git_describe.wait()
         version_git = version_num.decode("ascii").strip()
 
@@ -37,7 +38,7 @@ def get_gitVersion():
 
 
 def get_requirements(path=None):
-    """get a list of requirements and any dependency links associated.
+    r"""get a list of requirements and any dependency links associated.
 
     This function fascilitates git urls being in requirements.txt
     and installing them as normall just like pip install -r requirements.txt
@@ -81,11 +82,12 @@ def get_requirements(path=None):
     # iterate over regex and select package name group to insert over url
     for i, content in enumerate(re_groups):
         # re.search can return None so only if it returned something
-        if(content):
+        if content:
             print(i, content, requirements[i])
             requirements[i] = content.group(1)
-            dependency_links.append("{}#egg={}".format(content.group(0),
-                                                       content.group(1)))
+            dependency_links.append(
+                "{}#egg={}".format(content.group(0), content.group(1))
+            )
 
     return requirements, dependency_links
 
@@ -106,8 +108,21 @@ with open("README.rst", "r") as fh:
 
 # collect namespace packages but ignore certain undesired directories
 packages = find_namespace_packages(
-    exclude=("docs", "docs.*", "examples", "examples.*", "tests", "tests.*",
-             "build", "build.*", "dist", "dist.*", "venv", "venv.*"))
+    exclude=(
+        "docs",
+        "docs.*",
+        "examples",
+        "examples.*",
+        "tests",
+        "tests.*",
+        "build",
+        "build.*",
+        "dist",
+        "dist.*",
+        "venv",
+        "venv.*",
+    )
+)
 print("namespace packages:", packages)
 
 setup(

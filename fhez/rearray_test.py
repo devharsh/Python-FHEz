@@ -4,9 +4,10 @@
 # @Last modified time: 2021-10-20T12:37:55+01:00
 import time
 import unittest
-import numpy as np
 
+import numpy as np
 import seal
+
 from fhez.rearray import ReArray
 
 
@@ -25,7 +26,7 @@ class ReArray_tests(unittest.TestCase):
 
     def tearDown(self):
         t = time.time() - self.startTime
-        print('%s: %.3f' % (self.id(), t))
+        print("{}: {:.3f}".format(self.id(), t))
 
     def arithmetic_evaluator(self, re, other, func, experiment=False):
         self.assertIsInstance(re, ReArray)
@@ -36,8 +37,7 @@ class ReArray_tests(unittest.TestCase):
             print("origin", self.data)
             print("out:", out)
             print("comparitor:", comparitor)
-        self.assertEqual(out.tolist(),
-                         comparitor.tolist())
+        self.assertEqual(out.tolist(), comparitor.tolist())
 
     def test_numpy_bug(self):
         a = np.around(np.add(self.data, self.data)).tolist()
@@ -46,7 +46,7 @@ class ReArray_tests(unittest.TestCase):
 
     @property
     def data(self):
-        array = np.arange(64*32*32*3)
+        array = np.arange(64 * 32 * 32 * 3)
         array.shape = (64, 32, 32, 3)
         return array
 
@@ -57,14 +57,14 @@ class ReArray_tests(unittest.TestCase):
 
     def test_error_slot_overflow(self):
         """Testing that correctly errors when the data overflows encryption."""
-        data = np.arange(64*320*320*3)
+        data = np.arange(64 * 320 * 320 * 3)
         data.shape = (64, 320, 320, 3)  # making it waay to big
         with self.assertRaises(OverflowError):
             ReArray(plaintext=data, **self.reseal_args)
 
     def test__error_data_type(self):
         """Testing that correctly errors when the data overflows encryption."""
-        data = np.arange(64*32*32*3)
+        data = np.arange(64 * 32 * 32 * 3)
         data.shape = (64, 32, 32, 3)
         with self.assertRaises(TypeError):
             ReArray(plaintext=data.tolist(), **self.reseal_args)
@@ -94,6 +94,7 @@ class ReArray_tests(unittest.TestCase):
     def test_pickle(self):
         """Ensure that pickling is still possible at this higher dimension."""
         import pickle
+
         re = ReArray(plaintext=self.data, **self.reseal_args)
         dump = pickle.dumps(re)
         re = pickle.loads(dump)
@@ -146,7 +147,7 @@ class ReArray_tests(unittest.TestCase):
 
     def test_multiply_ndarray(self):
         re = ReArray(plaintext=self.data, **self.reseal_args)
-        filter = np.arange(3*3*3)
+        filter = np.arange(3 * 3 * 3)
         filter.shape = (3, 3, 3)
         with self.assertRaises(ArithmeticError):
             re = re * filter
@@ -195,7 +196,7 @@ class ReArray_tests(unittest.TestCase):
 
     def test_add_ndarray(self):
         re = ReArray(plaintext=self.data, **self.reseal_args)
-        filter = np.arange(3*3*3)
+        filter = np.arange(3 * 3 * 3)
         filter.shape = (3, 3, 3)
         with self.assertRaises(ArithmeticError):
             re = re + filter
@@ -297,18 +298,13 @@ class ReArray_tests(unittest.TestCase):
             re = np.array([2, 3, 4]) // re
 
     def test_sum(self):
-        data = np.array([
-            [1.0, 2.0, 3.0],
-            [1.0, 2.0, 3.0]
-        ])
+        data = np.array([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]])
         re = ReArray(plaintext=data, **self.reseal_args)
         sum = np.sum(re, axis=0)  # can only sum first axis
         self.assertIsInstance(sum, ReArray)
         plain_sum = np.array(sum)
         truth = np.sum(data, axis=0)
-        np.testing.assert_array_almost_equal(plain_sum, truth,
-                                             decimal=1,
-                                             verbose=True)
+        np.testing.assert_array_almost_equal(plain_sum, truth, decimal=1, verbose=True)
 
     def test_equality(self):
         """Check that ReArray param equality is being calculated properly."""
@@ -341,9 +337,7 @@ class ReArray_tests(unittest.TestCase):
         f_0 = np.isfinite(a)
         f_1 = np.isfinite(x)
         self.assertIsInstance(f_0, np.ndarray)
-        np.testing.assert_array_almost_equal(f_0, f_1,
-                                             decimal=1,
-                                             verbose=True)
+        np.testing.assert_array_almost_equal(f_0, f_1, decimal=1, verbose=True)
 
 
 if __name__ == "__main__":

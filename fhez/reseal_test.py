@@ -3,10 +3,10 @@
 # @Last modified by:   archer
 # @Last modified time: 2021-08-23T15:25:12+01:00
 
-import unittest
 import time
-import numpy as np
+import unittest
 
+import numpy as np
 import seal
 
 # backward compatibility
@@ -23,7 +23,7 @@ class ReSeal_tests(unittest.TestCase):
 
     def tearDown(self):
         t = time.time() - self.startTime
-        print('%s: %.3f' % (self.id(), t))
+        print("{}: {:.3f}".format(self.id(), t))
 
     def defaults_ckks(self):
         return {
@@ -41,10 +41,12 @@ class ReSeal_tests(unittest.TestCase):
 
     def gen_reseal(self, defaults):
         if defaults["scheme"] == seal.scheme_type.CKKS:
-            r = ReSeal(scheme=defaults["scheme"],
-                       poly_modulus_degree=defaults["poly_mod_deg"],
-                       coefficient_modulus=defaults["coeff_mod"],
-                       scale=defaults["scale"])
+            r = ReSeal(
+                scheme=defaults["scheme"],
+                poly_modulus_degree=defaults["poly_mod_deg"],
+                coefficient_modulus=defaults["coeff_mod"],
+                scale=defaults["scale"],
+            )
         else:
             raise NotImplementedError("BFV default gen_reseal not implemented")
         return r
@@ -104,12 +106,13 @@ class ReSeal_tests(unittest.TestCase):
         r.ciphertext = r + 2
         r = r + 4  # test return object style
         result = r.plaintext
-        print("c+p: 6 +", data, "=", np.round(result[:data.shape[0]]))
-        rounded_reshaped_result = np.round(result[:data.shape[0]])
-        self.assertEqual((data+6).tolist(), rounded_reshaped_result.tolist())
+        print("c+p: 6 +", data, "=", np.round(result[: data.shape[0]]))
+        rounded_reshaped_result = np.round(result[: data.shape[0]])
+        self.assertEqual((data + 6).tolist(), rounded_reshaped_result.tolist())
 
     def test_ciphertext_add_ciphertext(self):
         import copy
+
         defaults = self.defaults_ckks()
         r = self.gen_reseal(defaults)
         data = np.array([1, 2, 3])
@@ -118,9 +121,9 @@ class ReSeal_tests(unittest.TestCase):
         r.ciphertext = r + r2
         r = r + r2  # test return object style
         result = r.plaintext
-        print("c+c: 3 *", data, "=", np.round(result[:data.shape[0]]))
-        rounded_reshaped_result = np.round(result[:data.shape[0]])
-        self.assertEqual((data*3).tolist(), rounded_reshaped_result.tolist())
+        print("c+c: 3 *", data, "=", np.round(result[: data.shape[0]]))
+        rounded_reshaped_result = np.round(result[: data.shape[0]])
+        self.assertEqual((data * 3).tolist(), rounded_reshaped_result.tolist())
 
     def test_ciphertext_multiply_plaintext(self):
         defaults = self.defaults_ckks()
@@ -130,12 +133,13 @@ class ReSeal_tests(unittest.TestCase):
         r.ciphertext = r * 2
         r = r * 4  # test return object style
         result = r.plaintext
-        print("c*p: 8 *", data, "=", np.round(result[:data.shape[0]]))
-        rounded_reshaped_result = np.round(result[:data.shape[0]])
-        self.assertEqual((data*8).tolist(), rounded_reshaped_result.tolist())
+        print("c*p: 8 *", data, "=", np.round(result[: data.shape[0]]))
+        rounded_reshaped_result = np.round(result[: data.shape[0]])
+        self.assertEqual((data * 8).tolist(), rounded_reshaped_result.tolist())
 
     def test_ciphertext_multiply_ciphertext(self):
         import copy
+
         defaults = self.defaults_ckks()
         r = self.gen_reseal(defaults)
         data = np.array([100, 200, 300])
@@ -144,14 +148,13 @@ class ReSeal_tests(unittest.TestCase):
         r.ciphertext = r * r2
         r = r * r2  # test return object style
         result = r.plaintext
-        print("c*c:", data, " ^ 3 =", np.round(result[:data.shape[0]]))
-        rounded_reshaped_result = np.round(result[:data.shape[0]])
+        print("c*c:", data, " ^ 3 =", np.round(result[: data.shape[0]]))
+        rounded_reshaped_result = np.round(result[: data.shape[0]])
         # self.assertEqual((data * data * data).tolist(),
         #                  rounded_reshaped_result.tolist())
-        np.testing.assert_array_almost_equal(result[:data.shape[0]],
-                                             (data * data * data),
-                                             decimal=0,
-                                             verbose=True)
+        np.testing.assert_array_almost_equal(
+            result[: data.shape[0]], (data * data * data), decimal=0, verbose=True
+        )
 
     def test_encrypt_decrypt(self):
         defaults = self.defaults_ckks()
@@ -159,7 +162,7 @@ class ReSeal_tests(unittest.TestCase):
         data = np.array([1, 2, 3])
         r.ciphertext = data
         result = r.plaintext
-        rounded_reshaped_result = np.round(result[:data.shape[0]])
+        rounded_reshaped_result = np.round(result[: data.shape[0]])
         self.assertEqual((data).tolist(), rounded_reshaped_result.tolist())
 
     def test_complex_arithmetic(self):
@@ -175,15 +178,16 @@ class ReSeal_tests(unittest.TestCase):
         r2 = r2 * r  # test return object style
         expected = ((data * 20) + data) * data
         result = r2.plaintext
-        rounded_reshaped_result = np.round(result[:data.shape[0]])
+        rounded_reshaped_result = np.round(result[: data.shape[0]])
         # self.assertEqual(expected.tolist(),
         #                  rounded_reshaped_result.tolist())
-        np.testing.assert_array_almost_equal(result[:data.shape[0]], expected,
-                                             decimal=0,
-                                             verbose=True)
+        np.testing.assert_array_almost_equal(
+            result[: data.shape[0]], expected, decimal=0, verbose=True
+        )
 
     def test_pickle(self):
         import pickle
+
         defaults = self.defaults_ckks()
         r = self.gen_reseal(defaults)
         r.ciphertext = np.array([1, 2, 3])
@@ -193,6 +197,7 @@ class ReSeal_tests(unittest.TestCase):
 
     def test_deepcopy(self):
         import copy
+
         defaults = self.defaults_ckks()
         r = self.gen_reseal(defaults)
         r.ciphertext = np.array([1, 2, 3])

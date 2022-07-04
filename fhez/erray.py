@@ -12,12 +12,13 @@ uniform a format as possible.
 # @Last modified time: 2021-07-15T15:14:17+01:00
 # @License: please see LICENSE file in project root
 
+import logging as logger
 import os
 import sys
 import tempfile
 import unittest
+
 import numpy as np
-import logging as logger
 
 # backward compatibility
 from fhez.recache import ReCache
@@ -40,6 +41,7 @@ class Erray(np.lib.mixins.NDArrayOperatorsMixin):
             # adding mapping to class' attribute "remap"
             remap[method][np_func] = func
             return func
+
         return decorator
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
@@ -68,8 +70,9 @@ class Erray(np.lib.mixins.NDArrayOperatorsMixin):
         try:
             other = self._broadcast(other)
         except ValueError:
-            raise ArithmeticError("shapes: {}, {} not broadcastable".format(
-                self.shape, other.shape))
+            raise ArithmeticError(
+                "shapes: {}, {} not broadcastable".format(self.shape, other.shape)
+            )
         return other
 
     @implements(remap, np.multiply, "__call__")
@@ -101,8 +104,7 @@ class Erray(np.lib.mixins.NDArrayOperatorsMixin):
 
     def __str__(self):
         d = self.__dict__
-        d = {k: d[k] for k, v in d.items() if k not in ("_ciphertext",
-                                                        "_cache")}
+        d = {k: d[k] for k, v in d.items() if k not in ("_ciphertext", "_cache")}
         return "{}({})".format(self.__class__.__name__, d)
 
     def __len__(self):

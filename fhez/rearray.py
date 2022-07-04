@@ -5,10 +5,12 @@
 # @Last modified by:   archer
 # @Last modified time: 2021-10-21T10:33:07+01:00
 # @License: please see LICENSE file in project root
-import numpy as np
-import logging as logger
-from fhez.reseal import ReSeal
 import functools
+import logging as logger
+
+import numpy as np
+
+from fhez.reseal import ReSeal
 
 
 class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
@@ -34,15 +36,18 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
     ourselves and not worry the user with the intricacies of serialising this
     encryption.
     """
+
     # numpy remap class attribute NOT instance attribute!!!
     remap = {}
 
-    def __init__(self,
-                 plaintext: np.ndarray = None,
-                 seed: ReSeal = None,
-                 clone=None,
-                 cyphertext=None,
-                 **reseal_args):
+    def __init__(
+        self,
+        plaintext: np.ndarray = None,
+        seed: ReSeal = None,
+        clone=None,
+        cyphertext=None,
+        **reseal_args
+    ):
         if clone is None:
             # automatic seed generation for encryption
             self.seed = reseal_args if seed is None else seed
@@ -102,16 +107,18 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
                 "size": data.size,
             }
             # reshape data to (batchsize, examplesize)
-            view.shape = (self.origin["shape"][0],
-                          int(self.origin["size"] / self.origin["shape"][0]))
+            view.shape = (
+                self.origin["shape"][0],
+                int(self.origin["size"] / self.origin["shape"][0]),
+            )
             # checking if cyphertext is too small to fit data into
             if view.shape[1] > len(self.seed):
                 raise OverflowError(
                     "Data too big or encryption too small to fit:",
                     "data {} -> {} > {} reseal.len".format(
-                        self.origin["shape"][1:],
-                        view.shape[1],
-                        len(self.seed)))
+                        self.origin["shape"][1:], view.shape[1], len(self.seed)
+                    ),
+                )
             # iterate through, encrypt (using same seed), and append to list
             # for later use
             for sample in view:
@@ -119,9 +126,9 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
                 seedling.ciphertext = sample
                 self.cyphertext.append(seedling)
         else:
-            raise TypeError("data.setter got an {} instead of {}".format(
-                type(data), np.ndarray
-            ))
+            raise TypeError(
+                "data.setter got an {} instead of {}".format(type(data), np.ndarray)
+            )
 
     @property
     def origin(self):
@@ -163,8 +170,11 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
         if not isinstance(indices, tuple):
             return self.cyphertext[indices]
         else:
-            raise IndexError("{}[{}] invalid can only slice 1D not {}D".format(
-                self.__class__.__name__, indices, len(indices)))
+            raise IndexError(
+                "{}[{}] invalid can only slice 1D not {}D".format(
+                    self.__class__.__name__, indices, len(indices)
+                )
+            )
 
     def __len__(self):
         """Matching numpys len function"""
@@ -175,9 +185,8 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
         for example in self.cyphertext:
             accumulator.append(
                 # cutting off padding/ excess
-                example.plaintext[
-                    :self.origin["size"]//self.origin["shape"][0]
-                ])
+                example.plaintext[: self.origin["size"] // self.origin["shape"][0]]
+            )
         data = np.array(accumulator)
         data.shape = self.origin["shape"]
         return data.astype(dtype) if dtype is not None else data
@@ -210,8 +219,9 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
         try:
             other = self._broadcast(other)
         except ValueError:
-            raise ArithmeticError("shapes: {}, {} not broadcastable".format(
-                self.shape, other.shape))
+            raise ArithmeticError(
+                "shapes: {}, {} not broadcastable".format(self.shape, other.shape)
+            )
         return other
 
     def implements(remap, np_func, method):
@@ -224,6 +234,7 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
             # adding mapping to class' attribute "remap"
             remap[method][np_func] = func
             return func
+
         return decorator
 
     @implements(remap, np.multiply, "__call__")
@@ -264,7 +275,7 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
         """Reduce sum of cyphertext."""
         if axis == 0:
             # print("origin", np.array(self), self.shape, self.size)
-            cyphertext = functools.reduce(lambda x, y: x+y, self.cyphertext)
+            cyphertext = functools.reduce(lambda x, y: x + y, self.cyphertext)
             # print("summation", cyphertext,
             # np.array(cyphertext.plaintext).shape)
             # print("preview", np.array(cyphertext.plaintext))
@@ -274,8 +285,7 @@ class ReArray(np.lib.mixins.NDArrayOperatorsMixin):
             shape[0] = 1
             shape = tuple(shape)
             # modify origin of this new object as it is different
-            result.origin = {"shape": shape,
-                             "size": self.size//len(self.cyphertext)}
+            result.origin = {"shape": shape, "size": self.size // len(self.cyphertext)}
             # print("out shape", result.shape, result.size)
             return result
         else:
