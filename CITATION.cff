@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file. This repository is a Python 3 and Microsoft SEAL 4 compatible upgrade of the original Python-FHEz by George Onoufriou (see references)."
+type: software
+title: "Python-FHEz (Python 3 and Microsoft SEAL 4 compatible upgrade)"
+abstract: "A Python 3 and Microsoft SEAL 4 compatible upgrade of the Python-FHEz Fully Homomorphic Encryption library originally created by George Onoufriou."
+authors:
+  - given-names: "Devharsh"
+    family-names: "Trivedi"
+    name-suffix: "Ph.D., CISSP"
+    email: "devharsh.1592@gmail.com"
+    city: "Washington"
+    region: "D.C."
+    post-code: "20003"
+    country: "US"
+license: "GPL-3.0"
+repository-code: "https://github.com/devharsh/Python-FHEz"
+url: "https://github.com/devharsh/Python-FHEz"
+keywords:
+  - "fully-homomorphic-encryption"
+  - "microsoft-seal"
+  - "python"
+  - "privacy"
+references:
+  - type: software
+    title: "Python-FHEz Source Repository"
+    authors:
+      - given-names: "George"
+        family-names: "Onoufriou"
+    year: 2021
+    url: "https://gitlab.com/DeepCypher/python-fhez"
